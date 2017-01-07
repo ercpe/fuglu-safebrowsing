@@ -1,0 +1,67 @@
+From: <sender@example.com>
+To: <recipient@exmple.com>
+Subject: ***SPAM*** hi!
+Content-Type: multipart/alternative;
+ boundary="------------010800030001020207070302"
+
+This is a multi-part message in MIME format.
+--------------010800030001020207070302
+Content-Type: text/plain; charset=CP-850; format=flowed
+Content-Transfer-Encoding: quoted-printable
+
+Hello,
+
+Following the evaluation of your resume, we would like to let you know =
+that we've opened a new=20
+ position that will be perfectly suitable for you, based on your skills =
+and our requirements.
+
+Key requirements & benefits:
+- International environment in a famous multinational company;
+- Possibility to work from home with flexible schedule;
+- Salary from $4.000 up $8000 with bonuses.
+
+To to review the details about this vacancy and get in touch with our =
+human resource manager, please=20
+visit our site.
+
+Looking forward to getting in touch with you.
+
+Kind regards,
+HR Department
+--------------010800030001020207070302
+Content-Type: text/html; charset="CP-850"
+Content-Transfer-Encoding: quoted-printable
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+  <head>
+
+    <meta http-equiv=3D"content-type" content=3D"text/html; =
+charset=3DCP-850">
+  </head>
+  <body text=3D"#000000" bgcolor=3D"#ffffff">
+    Hello,<br>
+<br>
+Following the evaluation of your resume, we would like to let you know =
+that we've opened a new <br> position that will be perfectly suitable =
+for you, based on your skills and our requirements.<br>
+<br>
+<u>Key requirements & benefits</u>:<br>
+- International environment in a famous multinational company;<br>
+- Possibility to work from home with flexible schedule;<br>
+- Salary <u>from $4.000 up $8000 with bonuses</u>.<br>
+<br>
+To to review the details about this vacancy and get in touch with our =
+human resource manager, please <a =
+href=3D"http://diechatburg.de/media/editors/tinymce/plugins/advlist/"><b>=
+visit our site</b></a>.<br>
+<br>
+Looking forward to getting in touch with you.<br>
+<br>
+Kind regards,<br>
+HR Department
+  </body>
+</html>
+--------------010800030001020207070302--
+

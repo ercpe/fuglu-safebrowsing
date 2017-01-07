@@ -3,7 +3,7 @@
 
 from setuptools import setup, find_packages
 
-from safebrowsing import VERSION
+from fuglu_safebrowsing import VERSION
 
 setup(
     name='fuglu-safebrowsing',

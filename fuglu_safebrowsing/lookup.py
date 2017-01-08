@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
+import re
 import requests
 from fuglu.shared import ScannerPlugin, DUNNO, string_to_actioncode
 
 from fuglu_safebrowsing import VERSION
+from fuglu_safebrowsing.cache import SimpleCache
 
 DOMAINMAGIC_AVAILABLE = False
 try:
@@ -31,7 +33,7 @@ class SafebrowsingLookupPlugin(ScannerPlugin):
                 'description': 'Default action to take on positive result',
             }
         }
-        
+        self.cache = SimpleCache()
         self.logger = self._logger()
     
     @property
@@ -113,6 +115,10 @@ class SafebrowsingLookupPlugin(ScannerPlugin):
         if not (self.api_key and urls):
             return
 
+        cached_data = self.cache.get_many(urls)
+        self.logger.info("Found %s cached results", len(cached_data))
+        cached_urls = [x['threat']['url'] for x in cached_data]
+
         request_data = {
             'client': {
                 'clientId': 'fuglu-safebrowsing',
@@ -122,19 +128,50 @@ class SafebrowsingLookupPlugin(ScannerPlugin):
                 "threatTypes": self.threat_types,
                 "platformTypes": self.threat_platforms,
                 "threatEntryTypes": ["URL"],
-                "threatEntries": [{"url": u} for u in urls]
+                "threatEntries": [{"url": u} for u in urls if u not in cached_urls]
             }
         }
         
         try:
-            response = requests.post(SAFEBROWSING_API_URL + '?key=%s' % self.api_key,
-                                     json=request_data,
-                                     **self.requests_kwargs)
-            response.raise_for_status()
+            data = {
+                'matches': []
+            }
             
-            return response.json()
+            if request_data['threatInfo']['threatEntries']:
+                response = requests.post(SAFEBROWSING_API_URL + '?key=%s' % self.api_key,
+                                         json=request_data,
+                                         **self.requests_kwargs)
+                response.raise_for_status()
+                
+                data = response.json()
+
+            if data and 'matches' in data:
+                for match in data['matches']:
+                    if "cacheDuration" not in match:
+                        continue
+                    
+                    cache_duration = self.cache_duration_to_seconds(match['cacheDuration'])
+                    if not cache_duration:
+                        continue
+                    
+                    url = match['threat']['url']
+                    self.cache.add(url, match, cache_duration)
+                
+                data['matches'].extend(cached_data)
+            
+            return data
         except:
             self.logger.exception("Request to Safebrowsing API failed")
+
+    def cache_duration_to_seconds(self, duration_s):
+        if not duration_s:
+            return 0
+        
+        m = re.match("^(\d+)(?:\.\d+)s", duration_s, re.IGNORECASE)
+        if m:
+            return int(m.group(1))
+        
+        return 0
 
     def extract_urls(self, suspect):
         extractor = domainmagic.extractor.URIExtractor()

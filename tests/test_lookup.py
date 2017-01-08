@@ -152,7 +152,75 @@ class TestLookup(object):
         
         assert plugin.examine(suspect) == DELETE
 
+    @mock.patch("fuglu_safebrowsing.lookup.requests")
+    def test_check_safebrowsing_cached(self, requests_mock, plugin, suspect):
+        url = "http://example.com"
+        data = {
+            "threatType": "MALWARE",
+            "platformType": "WINDOWS",
+            "threatEntryType": "URL",
+            "threat": {"url": url},
+            "threatEntryMetadata": {
+                "entries": [{
+                    "key": "malware_threat_type",
+                    "value": "landing"
+                }]
+            },
+            "cacheDuration": "300.000s"
+        }
+        
+        plugin.cache.add(url, data, 300)
+
+        assert plugin.check_safebrowsing([url]) == {
+            'matches': [data]
+        }
+        requests_mock.post.assert_not_called()
+
+    @mock.patch("fuglu_safebrowsing.lookup.requests")
+    def test_check_safebrowsing_positive_result_cache(self, requests_mock, plugin, suspect):
+        url = "http://example.com"
+
+        data = {
+                "threatType": "MALWARE",
+                "platformType": "WINDOWS",
+                "threatEntryType": "URL",
+                "threat": {"url": url},
+                "threatEntryMetadata": {
+                    "entries": [{
+                        "key": "malware_threat_type",
+                        "value": "landing"
+                    }]
+                },
+                "cacheDuration": "300.000s"
+            }
+
+        response_mock = mock.MagicMock()
+        response_mock.json = mock.MagicMock(return_value={
+            "matches": [data]
+        })
+        requests_mock.post = mock.MagicMock(return_value=response_mock)
+    
+        assert plugin.check_safebrowsing([url]) == {
+            'matches': [data]
+        }
+        requests_mock.post.assert_called()
+
+        # requery again to test that caches is used
+        assert plugin.check_safebrowsing([url]) == {
+            'matches': [data]
+        }
+        requests_mock.post.assert_called_once()
+
     def test_extract_urls(self, plugin, suspect):
         assert plugin.extract_urls(suspect) == [
             "http://diechatburg.de/media/editors/tinymce/plugins/advlist/"
         ]
+
+    def test_cache_duration_to_seconds(self, plugin):
+        assert plugin.cache_duration_to_seconds(None) == 0
+        assert plugin.cache_duration_to_seconds("") == 0
+        assert plugin.cache_duration_to_seconds("123") == 0
+        assert plugin.cache_duration_to_seconds("123.0") == 0
+
+        assert plugin.cache_duration_to_seconds("300.0s") == 300
+        assert plugin.cache_duration_to_seconds("300.123s") == 300
